@@ -39,7 +39,7 @@ $ cd cs-firewall-bouncer/
 $ install.sh
 ```
 На последнем шаге установки будет ошибка, как раз и говорит о том что неможет выполнить некоторые команды)
-Поэтому помещаем ручками некоторые файлы и создаем скрипты далее
+Поэтому помещаем ручками некоторые файлы, конкретно в usr/bin/ копируем crowdsec-firewall-bouncer
 2. Качаем Remediation Components
 ```https://github.com/crowdsecurity/crowdsec/releases
 ```
@@ -49,7 +49,7 @@ $ cd crowdsec/
 $ sudo ./wizard.sh -i
 ```
 На последнем шаге установки будет ошибка, как раз и говорит о том что неможет выполнить некоторые команды)
-Поэтому помещаем ручками некоторые файлы и создаем скрипты далее
+Поэтому помещаем ручками некоторые файлы, конкретно в usr/bin/ копируем crowdsec и cscli
 #####################
 4. Настройка службы CrowdSec
 Так как systemctl не поддерживается, вам нужно вручную создать скрипт для управления службой CrowdSec с помощью service.
@@ -120,6 +120,7 @@ exit 0
 ```bash
 sudo chmod +x /etc/init.d/crowdsec
 sudo update-rc.d crowdsec defaults
+sudo update-rc.d crowdsec-firewall-bouncer defaults # а лучше в iptables скрипт дописать ```service crowdsec-firewall-bouncer restart``` до последней строчки которая сохраняет правила, для того, что бы баунсер если не запустился то сработал когда у вас сформировались новые правила iptables
 ```
 Теперь вы можете управлять службой CrowdSec с помощью команды service:
 ```bash
@@ -133,9 +134,28 @@ sudo service crowdsec status
 ```bash
 sudo service crowdsec status
 ```
-После каждого изменения перезапускайте сервис crowdsec
+После каждого изменения перезапускайте сервис ```service crowdsec restart ```
 ```
 service crowdsec-firewall-bouncer status # Проверка сервиса работы, если статус NO RUN соответсвенно ничего не банит
 cscli alerts list # Таблица срабатываний / метрик
 cscli decisions list # Текущие баны
 ```
+* Некоторые файлы помещенные в каталогах в архивах, распакуйте их (изза ограничения загрузки в github пришлось ужимать).
+* На момент создания этого readme - файлы от 10.10.2024.
+* В log помещать не обязательно, файлы должны создасться автоматически.
+* В /etc/init.d/ обязательные скрипты запуска служб и управления ими.
+* В /etc/crowdsec/ конфигурация, база, метрики, шаблоны - подправляйте для себя как нужно.
+* Чтобы все это дело склеилось обязательно выполните команды ниже:
+```cscli machines add --auto --force ``` для того, чтобы заработал локальный API сюда запишется доступ local_api_credentials.yaml
+* Если добавляете взаимосвязь и мониторинг на официальном сайте https://app.crowdsec.net/security-engines то
+```cscli console enroll -e context cld5v3129000....  ``` <-- код формируется там же на сайте, просто оттуда копируйте и в консоле своего сервера запускаете, следом на оф.сайте подтверждаете запрос. Аккаунт добавится в online_api_credentials.yaml
+* Мониторинга нормального визуального нет, везде танцы с бубном, самое легкое просто смотрим на оф. сайте либо устанавливаем Metabase https://github.com/liberodark/crowdsec-dashboard/tree/main
+
+Сопутствующие материалы по теме
+* https://blog.johnswitzerland.com/installing-crowd/
+* https://docs.crowdsec.net/u/getting_started/installation/linux/
+* https://serveradmin.ru/ustanovka-i-nastrojka-crowdsec/#Ustanovka_CrowdSec
+* https://habr.com/ru/companies/crowdsec/articles/581876/
+* https://github.com/liberodark/crowdsec-dashboard/tree/main
+
+по логам выясняйте причины сбоев!!!
